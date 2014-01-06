@@ -11,7 +11,6 @@ describe "Checkout", :js => true do
   let!(:country) { create(:country, :name => "United States", :states_required => true) }
   let!(:state) { create(:state, :name => "Alabama", :country => country) }
   let!(:zone) { create(:zone) }
-  let(:order) { OrderWalkthrough.up_to(:complete) }
   let!(:stock_location) { create(:stock_location) }
   let!(:payment_method) { create(:payment_method) }
   let!(:shipping_method) do
@@ -75,7 +74,7 @@ describe "Checkout", :js => true do
       Spree::Order.any_instance.stub :payment_required? => false
     end
     
-    it "full checkout"do
+    it "full checkout" do
       user = Spree::User.create("email" => "foo@bar.com", "password" => "foobar123", "password_confirmation" => "foobar123")
       sign_in_as!(user)
       wishlist = Spree::Wishlist.create({"name" => "SpreeWishlist", "is_private" => false,
@@ -85,9 +84,12 @@ describe "Checkout", :js => true do
       variant2 = FactoryGirl.create(:variant)
       variant2.product = prod
       variant2.save
+      variant2.stock_items.first.update_column(:count_on_hand, 1)
       prod.shipping_category = shipping_method.shipping_categories.first
       prod.save!
-      wished_product = Spree::WishedProduct.create(:variant_id => prod.master.id, :quantity => 2, :wishlist_id => wishlist.id)
+      variant2.shipping_category = shipping_method.shipping_categories.first
+      variant2.save!
+      wished_product = Spree::WishedProduct.create(:variant_id => variant2.id, :quantity => 2, :wishlist_id => wishlist.id)
       visit "/wishlists/#{wishlist.access_hash}"
       click_link prod.name
       click_button "Add To Cart"
@@ -105,7 +107,9 @@ describe "Checkout", :js => true do
       page.should have_content("Your order has been processed successfully")
       order = Spree::Order.first
       order.user.should == user
-      #order.line_items.first.variant.id.should == wished_product.variant.id
+      order.line_items.last.variant.id.should == variant2.id
+      wished_product.reload
+      wished_product.quantity.should == 1
     end
   end
 

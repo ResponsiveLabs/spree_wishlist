@@ -9,20 +9,19 @@ Spree::CheckoutController.class_eval do
       end
 
       if @order.completed?
-        session[:order_id] = nil
         unless session[:wishlist].nil?
           wishlist = Spree::Wishlist.find_by_access_hash(session[:wishlist])
           ids = @order.line_items.pluck(:variant_id)
           wished_products = wishlist.wished_products.select {|wp| ids.include?(wp.variant_id)}
-          
           wished_products.each do |wishp|
-            product = @order.line_items.where(:variant_id => wishp.variant_id)
+            product = @order.line_items.where(:variant_id => wishp.variant_id).first
             if product.quantity <= wishp.quantity 
               wishp.update_attributes(:quantity => wishp.quantity - product.quantity)
             end
           end
           session[:wishlist] = nil
         end
+        session[:order_id] = nil
         flash.notice = Spree.t(:order_processed_successfully)
         flash[:commerce_tracking] = "nothing special"
         redirect_to completion_route

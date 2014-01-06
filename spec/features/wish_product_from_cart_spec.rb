@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 describe Spree::Product do
-  context "add to wishlist" do
-    it "add the selected variant to the wishlist", :js => true do
+  context "add to wishlist", js: true do
+    it "add the selected variant to the wishlist" do
       user = FactoryGirl.create(:user)
       sign_in_as!(user)
 

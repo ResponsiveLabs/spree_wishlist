@@ -117,24 +117,6 @@ def login_step(email, password)
   click_button "Login" 
 end
 
-#def address_step
-#  addr = FactoryGirl.attributes_for(:customer_address)
-#  within("#billing") do
-#    fill_in "Name", :with => addr[:firstname]
-#    fill_in "Last Name", :with => addr[:lastname]
-#    fill_in "Address", :with => addr[:address1]
-#    fill_in "City", :with => addr[:city]
-#    fill_in "Phone", :with => addr[:phone]
-#    fill_in "Zip", :with => addr[:zipcode]
-#    select FactoryGirl.attributes_for(:country)[:name], :from => "Country"
-#    fill_in "order_bill_address_attributes_state_name", :with => addr[:state_name]
-#  end
-#  within("#shipping") do
-#    check("Use Billing Address")
-#  end
-#  click_button "Save and Continue"
-#end
-
 def delivery_step
   page.should have_content("Shipping Method")
   #first delivery method is already selected
@@ -157,6 +139,3 @@ def complete_payment
   order.payments.first.complete!
 end
 
-def complete_guest_payment
-  Spree::Order.last.payments.first.complete!
-end
