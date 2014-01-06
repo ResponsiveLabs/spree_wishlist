@@ -22,9 +22,11 @@
   </thead>
   <tbody id="line_items">
   <% if @wishlist.wished_products.size > 0 %>
-    <% @wishlist.wished_products.each do |wish|
+    <% @wishlist.wished_products.each do |wish| 
         variant = wish.variant
         product = variant.product %>
+    <% unless wish.try(:quantity).nil? %>
+    <% unless wish.quantity <= 0 %>
     <tr class="<%= cycle('', 'alt') %>">
     <% if @wishlist.user == spree_current_user %>
       <td>
@@ -65,6 +67,8 @@
         <%= number_to_currency(variant.price) %>
       </td>
     </tr>
+    <% end %>
+    <% end %>
     <% end -%>
   <% else -%>
     <tr>

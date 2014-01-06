@@ -17,12 +17,12 @@ require File.expand_path('../dummy/config/environment.rb',  __FILE__)
 require 'rspec/rails'
 require 'database_cleaner'
 require 'ffaker'
+require 'spree/testing_support/capybara_ext'
 require 'capybara/rspec'
 require 'capybara/poltergeist'
 require 'capybara-screenshot'
 require 'capybara-screenshot/rspec'
 Capybara.javascript_driver = :poltergeist
-
 # Requires supporting ruby files with custom matchers and macros, etc,
 # in spec/support/ and its subdirectories.
 Dir[File.join(File.dirname(__FILE__), 'support/**/*.rb')].each { |f| require f }
@@ -43,7 +43,9 @@ RSpec.configure do |config|
   # visit spree.admin_path
   # current_path.should eql(spree.products_path)
   config.include Spree::TestingSupport::UrlHelpers
-
+  config.include Spree::TestingSupport::ControllerRequests, :type => :controller
+  config.include Devise::TestHelpers, :type => :controller
+  config.include Rack::Test::Methods, :type => :feature
   # == Mock Framework
   #
   # If you prefer to use mocha, flexmock or RR, uncomment the appropriate line:
@@ -70,10 +72,15 @@ RSpec.configure do |config|
 
   # Before each spec check if it is a Javascript test and switch between using database transactions or not where necessary.
   config.before :each do
-    DatabaseCleaner.strategy = example.metadata[:js] ? :truncation : :transaction
+    if example.metadata[:js]
+      DatabaseCleaner.strategy = :truncation
+    else
+      DatabaseCleaner.strategy = :transaction
+    end
+  end
+  config.before(:each) do
     DatabaseCleaner.start
   end
-
   # After each spec clean the database.
   config.after :each do
     DatabaseCleaner.clean
@@ -87,4 +94,69 @@ def sign_in_as!(user)
   fill_in 'Email', :with => user.email
   fill_in 'Password', :with => user.password
   click_button 'Login'
+end
+
+def complete_checkout_with_login(email, password)
+  begin_checkout
+  login_step(email, password)
+  address_step
+  delivery_step
+  payment_step
+  confirm_step
+end
+
+def begin_checkout
+  click_button "Checkout"
+end
+
+def login_step(email, password)
+  within("#password-credentials") do
+    fill_in "Email", :with => email 
+    fill_in "Password", :with => password
+  end
+  click_button "Login" 
+end
+
+#def address_step
+#  addr = FactoryGirl.attributes_for(:customer_address)
+#  within("#billing") do
+#    fill_in "Name", :with => addr[:firstname]
+#    fill_in "Last Name", :with => addr[:lastname]
+#    fill_in "Address", :with => addr[:address1]
+#    fill_in "City", :with => addr[:city]
+#    fill_in "Phone", :with => addr[:phone]
+#    fill_in "Zip", :with => addr[:zipcode]
+#    select FactoryGirl.attributes_for(:country)[:name], :from => "Country"
+#    fill_in "order_bill_address_attributes_state_name", :with => addr[:state_name]
+#  end
+#  within("#shipping") do
+#    check("Use Billing Address")
+#  end
+#  click_button "Save and Continue"
+#end
+
+def delivery_step
+  page.should have_content("Shipping Method")
+  #first delivery method is already selected
+  click_button "Save and Continue"
+end
+      
+def payment_step
+  page.should have_content("Payment Information")
+  # first payment method is already selected
+  click_button "Save and Continue"
+end
+
+def confirm_step
+  page.should have_content("Your order has been processed successfully")
+end
+
+# Useful to capture payments
+def complete_payment
+  order = Spree::Order.where(:user_id =>Spree::User.where(:email => "foo@bar.com").first.id).first
+  order.payments.first.complete!
+end
+
+def complete_guest_payment
+  Spree::Order.last.payments.first.complete!
 end

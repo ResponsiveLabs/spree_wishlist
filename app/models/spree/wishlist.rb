@@ -3,7 +3,7 @@ class Spree::Wishlist < ActiveRecord::Base
   has_many :wished_products
   before_create :set_access_hash
 
-  attr_accessible :name, :is_default, :is_private, :user
+  attr_accessible :name, :is_default, :is_private, :user, :type_of_delivery
     
   validates :name, :presence => true
   

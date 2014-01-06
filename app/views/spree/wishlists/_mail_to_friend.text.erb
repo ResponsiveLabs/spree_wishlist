@@ -2,7 +2,7 @@
 
 Please, take a look to my wishlist:
 
-  * <%= wishlist.name %>
+  * <%= object.name %>
 
 <% unless mail.message.blank? -%>
 <%= mail.message %>
@@ -10,5 +10,5 @@ Please, take a look to my wishlist:
 
 <%= mail.sender_name %>
 
-Click the link below to view the <%= wishlist.name %> page.
-<%= wishlist_url(wishlist) %>
+Click the link below to view the <%= object.name %> page.
+<%= wishlist_url(object) %>

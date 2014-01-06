@@ -34,4 +34,11 @@ class Spree::WishedProductsController < Spree::StoreController
       format.html { redirect_to wishlist_url(@wished_product.wishlist) }
     end
   end
+
+  private
+
+  def wished_product_attributes
+    params.require(:wished_product).permit(:variant_id, :wishlist_id, :quantity)
+  end
+
 end
