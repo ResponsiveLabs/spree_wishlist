@@ -6,8 +6,6 @@ class Spree::Wishlist < ActiveRecord::Base
   attr_accessible :name, :is_default, :is_private, :user, :type_of_delivery
     
   validates :name, :presence => true
-  
-  attr_accessible :name, :is_default, :is_private
 
   def include?(variant_id)
     self.wished_products.map(&:variant_id).include? variant_id.to_i
@@ -44,7 +42,7 @@ class Spree::Wishlist < ActiveRecord::Base
                                      wished_product: wished_product,
                                      order: order
 
-      wished_product.update_attributes quantity: [wished_product.quantity - line_item.quantity, 0].max
+      wished_product.save # before_save hook updates quantity
     end
   end
 
@@ -59,8 +57,8 @@ class Spree::Wishlist < ActiveRecord::Base
   def wished_products_in_order(order)
     common_variant_ids = common_variant_ids_with order
 
-    line_items = order.line_items.where(variant_id: common_variant_ids).sort_by { |p| p.variant_id }
-    wished_products = self.wished_products.where(variant_id: common_variant_ids).sort_by { |p| p.variant_id }
+    line_items = order.line_items.where(variant_id: common_variant_ids).reorder(:variant_id)
+    wished_products = self.wished_products.where(variant_id: common_variant_ids).reorder(:variant_id)
 
     line_items.zip wished_products
   end
