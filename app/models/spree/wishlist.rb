@@ -1,9 +1,13 @@
 class Spree::Wishlist < ActiveRecord::Base
-  belongs_to :user, :class_name => Spree.user_class 
   has_many :wished_products
+  belongs_to :user,            class_name: Spree.user_class
+  belongs_to :ship_address,    class_name: Spree::Address
+
+  accepts_nested_attributes_for :ship_address
+
   before_create :set_access_hash
 
-  attr_accessible :name, :is_default, :is_private, :user, :type_of_delivery
+  attr_accessible :name, :is_default, :is_private, :user, :type_of_delivery, :ship_address_attributes
     
   validates :name, :presence => true
 
