@@ -35,7 +35,7 @@ describe "Checkout", :js => true do
       variant2.product = prod
       variant2.save
       
-      wished_product = Spree::WishedProduct.create(:variant_id => variant2.id, :quantity => 2, :wishlist_id => wishlist.id)
+      wished_product = Spree::WishedProduct.create(:variant_id => variant2.id, :initial_quantity => 2, :wishlist_id => wishlist.id)
       visit "/wishlists/#{wishlist.access_hash}"
       click_link prod.name
       page.should have_content("SpreeWishlist")
@@ -50,7 +50,7 @@ describe "Checkout", :js => true do
       variant2 = FactoryGirl.create(:variant)
       variant2.product = prod
       variant2.save
-      wished_product = Spree::WishedProduct.create(:variant_id => variant2.id, :quantity => 2, :wishlist_id => wishlist.id)
+      wished_product = Spree::WishedProduct.create(:variant_id => variant2.id, :initial_quantity => 2, :wishlist_id => wishlist.id)
       prod.shipping_category = shipping_method.shipping_categories.first
       prod.save!
     
@@ -89,7 +89,7 @@ describe "Checkout", :js => true do
       prod.save!
       variant2.shipping_category = shipping_method.shipping_categories.first
       variant2.save!
-      wished_product = Spree::WishedProduct.create(:variant_id => variant2.id, :quantity => 2, :wishlist_id => wishlist.id)
+      wished_product = Spree::WishedProduct.create(:variant_id => variant2.id, :initial_quantity => 2, :wishlist_id => wishlist.id)
       visit "/wishlists/#{wishlist.access_hash}"
       click_link prod.name
       click_button "Add To Cart"

@@ -6,8 +6,6 @@ class Spree::Wishlist < ActiveRecord::Base
   attr_accessible :name, :is_default, :is_private, :user, :type_of_delivery
     
   validates :name, :presence => true
-  
-  attr_accessible :name, :is_default, :is_private
 
   def include?(variant_id)
     self.wished_products.map(&:variant_id).include? variant_id.to_i
@@ -36,10 +34,37 @@ class Spree::Wishlist < ActiveRecord::Base
     !self.is_private?
   end
 
+  def update_quantities(order)
+    wished_products_in_order(order).each do |line_item, wished_product|
+      Spree::PurchasedProduct.create quantity: [wished_product.quantity, line_item.quantity].min,
+                                     item_price: line_item.price,
+                                     user: order.user,
+                                     wished_product: wished_product,
+                                     order: order
+
+      wished_product.save # before_save hook updates quantity
+    end
+  end
+
+
   private
 
   def set_access_hash
     random_string = SecureRandom::hex(16)
     self.access_hash = Digest::SHA1.hexdigest("--#{user_id}--#{random_string}--#{Time.now}--")
-  end  
+  end
+
+  def wished_products_in_order(order)
+    common_variant_ids = common_variant_ids_with order
+
+    line_items = order.line_items.where(variant_id: common_variant_ids).reorder(:variant_id)
+    wished_products = self.wished_products.where(variant_id: common_variant_ids).reorder(:variant_id)
+
+    line_items.zip wished_products
+  end
+
+  def common_variant_ids_with(order)
+    order.line_items.pluck(:variant_id) & self.wished_products.pluck(:variant_id)
+  end
+
 end

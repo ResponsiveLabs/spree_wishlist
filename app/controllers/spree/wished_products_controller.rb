@@ -5,13 +5,10 @@ class Spree::WishedProductsController < Spree::StoreController
     @wished_product = Spree::WishedProduct.new(params[:wished_product])
     @wishlist = spree_current_user.wishlist
 
-    if @wishlist.include? params[:wished_product][:variant_id]
-      @wished_product = @wishlist.wished_products.detect {|wp| wp.variant_id == params[:wished_product][:variant_id].to_i }
+    if @wishlist.include? @wished_product.variant_id
+      @wished_product = @wishlist.wished_products.detect {|wp| wp.variant_id == @wished_product.variant_id }
     else
-      @wished_product.wishlist = spree_current_user.wishlist
-      if params[:wished_product][:quantity].nil?
-        @wished_product.quantity = 1
-      end
+      @wished_product.wishlist = @wishlist
       @wished_product.save
     end
 
@@ -36,12 +33,6 @@ class Spree::WishedProductsController < Spree::StoreController
     respond_with(@wished_product) do |format|
       format.html { redirect_to wishlist_url(@wished_product.wishlist) }
     end
-  end
-
-  private
-
-  def wished_product_attributes
-    params.require(:wished_product).permit(:variant_id, :wishlist_id, :quantity)
   end
 
 end
